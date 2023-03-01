@@ -1,0 +1,6 @@
+
+
+1. If no device is connected / charger is connected (port state 0): Accept power in (LOW)
+2. If a puck is connected to a port AND bat voltage > 20%, output power to puck (HIGH)
+3. If an aux device is connected to a port AND bat voltage > 50%, output power to aux device (HIGH)
+4. If a secondary battery is connected to a port AND bat voltage > 80%, output power to secondary battery. ONLY ONE secondary battery can be charged at a time

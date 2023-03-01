@@ -5,7 +5,10 @@
 
 void run_test(char* test_name, SystemInputState input_state, SystemOutputState expected_output_state) {
     SystemOutputState actual_output_state = {
-        .MOS_1 = FLOATING
+        .top_output_enable = FLOATING,
+        .bottom_output_enable = FLOATING,
+        .port1_output_enable = FLOATING,
+        .port2_output_enable = FLOATING,
     };
     update_system_state(&input_state, &actual_output_state);
     if (memcmp(&actual_output_state, &expected_output_state, sizeof(SystemOutputState)) == 0) {
@@ -16,23 +19,78 @@ void run_test(char* test_name, SystemInputState input_state, SystemOutputState e
 
     // test failed :(
     printf("Test: %s FAILED\n", test_name);
-    if (expected_output_state.MOS_1 != actual_output_state.MOS_1) {
-        print_pin_state("\tExpected MOS_1 to be", expected_output_state.MOS_1);
-        print_pin_state("\tBut it was", actual_output_state.MOS_1);
+    if (expected_output_state.top_output_enable != actual_output_state.top_output_enable) {
+        print_pin_state("\tExpected top_output_enable to be", expected_output_state.top_output_enable);
+        print_pin_state("\tBut it was", actual_output_state.top_output_enable);
+    }
+
+    printf("Test: %s FAILED\n", test_name);
+    if (expected_output_state.bottom_output_enable != actual_output_state.bottom_output_enable) {
+        print_pin_state("\tExpected top_output_enable to be", expected_output_state.bottom_output_enable);
+        print_pin_state("\tBut it was", actual_output_state.bottom_output_enable);
+    }
+
+    printf("Test: %s FAILED\n", test_name);
+    if (expected_output_state.port1_output_enable != actual_output_state.port1_output_enable) {
+        print_pin_state("\tExpected top_output_enable to be", expected_output_state.port1_output_enable);
+        print_pin_state("\tBut it was", actual_output_state.port1_output_enable);
+    }
+
+    printf("Test: %s FAILED\n", test_name);
+    if (expected_output_state.port2_output_enable != actual_output_state.port2_output_enable) {
+        print_pin_state("\tExpected top_output_enable to be", expected_output_state.port2_output_enable);
+        print_pin_state("\tBut it was", actual_output_state.port2_output_enable);
     }
 }
 
 int main() {
     run_test(
-            "Dummy test",
+            "Nothing connected",
             (SystemInputState){
-                .BOTTOM_VOLTAGE = 0.1,
-                .TOP_VOLTAGE = 0.3,
-                .PORT_IN_VOLTAGE = 0.5,
-                .PORT_OUT_VOLTAGE = 0.7
+                    .internal_battery_voltage = 1.0,
+
+                    .top_state_bool_low = 0.0,
+                    .top_state_bool_high = 0.0,
+
+                    .bottom_state_bool_low = 0.0,
+                    .bottom_state_bool_high = 0.0,
+
+                    .port1_state_bool_low = 0.0,
+                    .port1_state_bool_high = 0.0,
+
+                    .port2_state_bool_low = 0.0,
+                    .port2_state_bool_high = 0.0,
+            },
+            (SystemOutputState){
+                    .top_output_enable = LOW,
+                    .bottom_output_enable = LOW,
+                    .port1_output_enable = LOW,
+                    .port2_output_enable = LOW,
+            }
+    );
+
+    run_test(
+            "Puck connected via top port, no input sources, battery is full",
+            (SystemInputState){
+                .internal_battery_voltage = 1.0,
+
+                .top_state_bool_low = 1.0,
+                .top_state_bool_high = 0.0,
+
+                .bottom_state_bool_low = 0.0,
+                .bottom_state_bool_high = 0.0,
+
+                .port1_state_bool_low = 0.0,
+                .port1_state_bool_high = 0.0,
+
+                .port2_state_bool_low = 0.0,
+                .port2_state_bool_high = 0.0,
         },
     (SystemOutputState){
-                .MOS_1 = HIGH
+                .top_output_enable = HIGH,
+                .bottom_output_enable = LOW,
+                .port1_output_enable = LOW,
+                .port2_output_enable = LOW,
         }
     );
 
