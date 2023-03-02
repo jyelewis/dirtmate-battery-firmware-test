@@ -2,7 +2,6 @@
 // Created by Josh Lloyd on 26/2/2023.
 //
 
-#include <stdbool.h>
 #include "update_system_state.h"
 #include "fake_io.h"
 
@@ -22,19 +21,15 @@ typedef enum {
 } CONNECTED_DEVICE_STATE;
 
 CONNECTED_DEVICE_STATE read_connected_device_state(float high_bit, float low_bit) {
+    // read 2 signals as a single integer value representing CONNECTED_DEVICE_STATE
     CONNECTED_DEVICE_STATE state = 0;
-    if (high_bit > 0.8) {
-        state += 2;
-    }
-    if (low_bit > 0.8) {
-        state += 1;
-    }
+    if (high_bit > 0.8) state += 2;
+    if (low_bit > 0.8) state += 1;
 
     return state;
 }
 
 void update_system_state(SystemInputState *input_state, SystemOutputState *output_state) {
-    // TODO: implement me
     CONNECTED_DEVICE_STATE top_port_state = read_connected_device_state(input_state->top_state_bool_high,
                                                                         input_state->top_state_bool_low);
     CONNECTED_DEVICE_STATE bottom_port_state = read_connected_device_state(input_state->bottom_state_bool_high,
@@ -52,47 +47,27 @@ void update_system_state(SystemInputState *input_state, SystemOutputState *outpu
     output_state->port1_output_enable = LOW;
     output_state->port2_output_enable = LOW;
 
-    // we are only allowed to charge one battery at a time
-    // keep track of whether we are already charging a battery
-    int is_charging_external_battery = false;
-
-    // Top Pins - Battery, Puck or Off
-    if (top_port_state == PORT_STATE_PUCK && battery_percentage >= LOW_BATTERY_PERCENTAGE) {
-        output_state->top_output_enable = HIGH;
-    } else if (top_port_state == PORT_STATE_EXTERNAL_BATTERY_REQUESTING_POWER &&
-               battery_percentage >= HIGH_BATTERY_PERCENTAGE && is_charging_external_battery == false) {
-        output_state->top_output_enable = HIGH;
-        is_charging_external_battery = true;
-        // maybe combine these two into one
+    if (battery_percentage > LOW_BATTERY_PERCENTAGE) {
+        // enable power to any connected pucks
+        if (top_port_state == PORT_STATE_PUCK) output_state->top_output_enable = HIGH;
+        if (bottom_port_state == PORT_STATE_PUCK) output_state->bottom_output_enable = HIGH;
+        if (port1_state == PORT_STATE_PUCK) output_state->port1_output_enable = HIGH;
+        if (port2_state == PORT_STATE_PUCK) output_state->port2_output_enable = HIGH;
     }
 
-    // Bottom Pins - Battery, Off, Managing Two Batteries
-    if (bottom_port_state == PORT_STATE_EXTERNAL_BATTERY_REQUESTING_POWER &&
-        battery_percentage >= HIGH_BATTERY_PERCENTAGE && is_charging_external_battery == false) {
-        output_state->bottom_output_enable = HIGH;
-        is_charging_external_battery = true;
+    if (battery_percentage > HALF_BATTERY_PERCENTAGE) {
+        // enable power to any connected aux devices
+        if (top_port_state == PORT_STATE_AUX) output_state->top_output_enable = HIGH;
+        if (bottom_port_state == PORT_STATE_AUX) output_state->bottom_output_enable = HIGH;
+        if (port1_state == PORT_STATE_AUX) output_state->port1_output_enable = HIGH;
+        if (port2_state == PORT_STATE_AUX) output_state->port2_output_enable = HIGH;
     }
 
-    // Port 1 - Puck or Auxiliary Power
-    if (port1_state == PORT_STATE_PUCK && battery_percentage > LOW_BATTERY_PERCENTAGE) {
-        output_state->port1_output_enable = HIGH;
-    } else if (port1_state == PORT_STATE_AUX && battery_percentage >= HALF_BATTERY_PERCENTAGE) {
-        output_state->port1_output_enable = HIGH;
+    if (battery_percentage > HIGH_BATTERY_PERCENTAGE) {
+        // enable power to at most 1 battery
+        if (top_port_state == PORT_STATE_EXTERNAL_BATTERY_REQUESTING_POWER) output_state->top_output_enable = HIGH;
+        else if (bottom_port_state == PORT_STATE_EXTERNAL_BATTERY_REQUESTING_POWER) output_state->bottom_output_enable = HIGH;
+        else if (port1_state == PORT_STATE_EXTERNAL_BATTERY_REQUESTING_POWER) output_state->port1_output_enable = HIGH;
+        else if (port2_state == PORT_STATE_EXTERNAL_BATTERY_REQUESTING_POWER) output_state->port2_output_enable = HIGH;
     }
-
-    // Port 2 - Puck or Auxiliary Power
-    if (port2_state == PORT_STATE_AUX && battery_percentage >= HALF_BATTERY_PERCENTAGE) {
-        output_state->port2_output_enable = HIGH;
-        // Is it worth adding another statement turning both on at the same time?
-    } else if (port2_state == PORT_STATE_PUCK && battery_percentage >= LOW_BATTERY_PERCENTAGE) {
-        output_state->port2_output_enable = HIGH;
-    }
-} 
-    
-  
-    
-    
-
-
-
-
+}

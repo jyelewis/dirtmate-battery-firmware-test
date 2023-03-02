@@ -2,3 +2,4 @@
 
 clang *.c -o dirtmate-battery-firmware-test
 ./dirtmate-battery-firmware-test
+rm dirtmate-battery-firmware-test
